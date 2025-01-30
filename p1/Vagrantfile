@@ -1,6 +1,5 @@
 Vagrant.configure(2) do |config|
-  config.vm.box = "ubuntu/jammy64"
-  # config.vm.box_url = REDACTED
+  config.vm.box = "debian/bullseye64"
 
   config.vm.define "bcarolleS" do |control|
     control.vm.hostname = "bcarolleS"
@@ -10,25 +9,33 @@ Vagrant.configure(2) do |config|
       v.memory = 1024
       v.cpus = 1
     end
-    config.vm.provision "shell", inline: <<-SHELL
+    control.vm.provision "shell", inline: <<-SHELL
       sudo apt update && sudo apt upgrade -y
       sudo apt install net-tools -y
       curl -sfL https://get.k3s.io | sh -
+      echo "alias k=kubectl" >> ~/.bashrc
+      sudo cat /var/lib/rancher/k3s/server/node-token > /vagrant/k3s-token
     SHELL
   end
 
-  config.vm.define "bcarolleSW" do |control|
-    control.vm.hostname = "bcarolleSW"
-    control.vm.network "private_network", ip: "192.168.56.111"
-    control.vm.provider "virtualbox" do |v|
+  config.vm.define "bcarolleSW" do |worker|
+    worker.vm.hostname = "bcarolleSW"
+    worker.vm.network "private_network", ip: "192.168.56.111"
+    worker.vm.provider "virtualbox" do |v|
       v.name = "bcarolleSW"
       v.memory = 1024
       v.cpus = 1
     end
-    config.vm.provision "shell", inline: <<-SHELL
+    worker.vm.provision "shell", inline: <<-SHELL
       sudo apt update && sudo apt upgrade -y
       sudo apt install net-tools -y
-      curl -sfL https://get.k3s.io | sh -
+      while [ ! -f /vagrant/k3s-token ]; do
+        echo "Waiting for k3s-token..."
+        sleep 5
+      done
+      export TOKEN=$(cat /vagrant/k3s-token)
+      curl -sfL https://get.k3s.io/ | K3S_URL="https://192.168.56.110:6443/" K3S_TOKEN="${TOKEN}" INSTALL_K3S_EXEC="agent --node-ip 192.168.56.111" sh -
+      echo "alias k=kubectl" >> ~/.bashrc
     SHELL
   end
 end
