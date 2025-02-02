@@ -11,9 +11,8 @@ Vagrant.configure(2) do |config|
     end
     control.vm.provision "shell", inline: <<-SHELL
       sudo apt update && sudo apt upgrade -y
-      sudo apt install net-tools -y
-      curl -sfL https://get.k3s.io | sh -
-      echo "alias k=kubectl" >> ~/.bashrc
+      sudo apt install net-tools -y curl
+      sudo curl -sfL https://get.k3s.io | sh -
       sudo cat /var/lib/rancher/k3s/server/node-token > /vagrant/k3s-token
     SHELL
   end
@@ -28,14 +27,14 @@ Vagrant.configure(2) do |config|
     end
     worker.vm.provision "shell", inline: <<-SHELL
       sudo apt update && sudo apt upgrade -y
-      sudo apt install net-tools -y
+      sudo apt install net-tools -y curl
       while [ ! -f /vagrant/k3s-token ]; do
         echo "Waiting for k3s-token..."
         sleep 5
       done
       export TOKEN=$(cat /vagrant/k3s-token)
-      curl -sfL https://get.k3s.io/ | K3S_URL="https://192.168.56.110:6443/" K3S_TOKEN="${TOKEN}" INSTALL_K3S_EXEC="agent --node-ip 192.168.56.111" sh -
-      echo "alias k=kubectl" >> ~/.bashrc
+      sudo rm /vagrant/k3s-token
+      sudo curl -sfL https://get.k3s.io/ | K3S_URL="https://192.168.56.110:6443/" K3S_TOKEN="${TOKEN}" INSTALL_K3S_EXEC="agent --node-ip 192.168.56.111" sh -
     SHELL
   end
 end
