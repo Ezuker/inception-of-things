@@ -13,7 +13,9 @@ Vagrant.configure(2) do |config|
       sudo apt update && sudo apt upgrade -y
       sudo apt install net-tools -y curl
       sudo curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server" sh -
-      sudo kubectl apply -f /vagrant/config.yaml
+      sudo kubectl apply -f /vagrant/deployments.yaml
+      sudo kubectl apply -f /vagrant/services.yaml
+      sudo kubectl apply -f /vagrant/ingress.yaml
     SHELL
   end
 end
