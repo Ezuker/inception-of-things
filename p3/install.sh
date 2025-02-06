@@ -24,21 +24,30 @@ if [ -n "$1" ] && [ "$1" = "clean" ]; then
     exit 0
 fi
 
-# Check if k3d installed
+sudo apt-get update && sudo apt upgrade -y
+sudo apt install net-tools -y curl
+if ! docker --version >/dev/null 2>&1; then
+    echo -e "${BOLD}${RED}docker is not installed. Installing now...${RESET}"
+    sudo apt-get install docker.io
+else
+    echo -e "${GREEN}docker is already installed.${RESET}"
+fi
+
 if ! k3d --version >/dev/null 2>&1; then
     echo -e "${BOLD}${RED}k3d is not installed. Installing now...${RESET}"
-    curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+    sudo curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | sudo bash
 else
     echo -e "${GREEN}k3d is already installed.${RESET}"
 fi
 
 if ! command -v kubectl >/dev/null 2>&1; then
-  sudo apt-get update && sudo apt upgrade -y
-  sudo apt install curl apt-transport-https -y
-  sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-  sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    echo -e "${BOLD}${RED}kubectl is not installed. Installing now...${RESET}"
+    sudo apt-get update && sudo apt upgrade -y
+    sudo apt install curl apt-transport-https -y
+    sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 else
-  echo -e "${GREEN}kubectl already installed${RESET}"
+    echo -e "${GREEN}kubectl already installed${RESET}"
 fi
 
 
