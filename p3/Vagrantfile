@@ -6,8 +6,8 @@ Vagrant.configure(2) do |config|
     control.vm.network "private_network", ip: "192.168.56.110"
     control.vm.provider "virtualbox" do |v|
       v.name = "bcarolleS"
-      v.memory = 1024
-      v.cpus = 1
+      v.memory = 2048
+      v.cpus = 4
     end
     control.vm.provision "shell", inline: <<-SHELL
       chmod +x /vagrant/install.sh

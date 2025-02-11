@@ -28,7 +28,7 @@ sudo apt-get update && sudo apt upgrade -y
 sudo apt install net-tools -y curl
 if ! docker --version >/dev/null 2>&1; then
     echo -e "${BOLD}${RED}docker is not installed. Installing now...${RESET}"
-    sudo apt-get install docker.io
+    sudo apt-get install docker.io -y
 else
     echo -e "${GREEN}docker is already installed.${RESET}"
 fi
@@ -71,12 +71,20 @@ fi
 if [ "$(sudo kubectl get ns | grep -c argocd)" -ne 1 ]; then
     echo -e "${RED}No namespace named argocd. Creating it...${RESET}" 
     sudo kubectl create namespace argocd
+    sudo kubectl create namespace dev
 fi
-sudo kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+sudo kubectl apply -k .
 sleep 10
 sudo kubectl port-forward svc/argocd-server -n argocd 8080:443 &
 
-
-brew install argocd
-SECRET_PASS=$(sudo kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
-sudo argocd login localhost:8080 --username admin --password ${SECRET_PASS} --insecure
+if ! brew --version; then
+    git clone https://github.com/Homebrew/brew ~/homebrew
+fi
+if ! argocd version; then
+    brew install argocd
+fi
+argocd app create <APP_NAME> \
+  --repo <REPO_URL> \
+  --path <PATH_TO_MANIFESTS> \
+  --dest-server <K8S_API_SERVER> \
+  --dest-namespace <NAMESPACE>
